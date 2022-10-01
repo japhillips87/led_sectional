@@ -1,0 +1,93 @@
+{
+  "vfr_led": 3,
+  "mvfr_led": 2,
+  "ifr_led": 1,
+  "lifr_led": 0,
+  "visited_led": 8,
+  "not_visited_led": 9,
+  "flight_category_mode_led": 4,
+  "temperature_mode_led": 5,
+  "visited_mode_led": 6,
+  "party_mode_led": 7,
+  "min_temp": 0,
+  "max_temp": 38,
+  "num_of_leds": 110,
+  "led_data_pin": 18,
+  "led_brightness": 30,
+  "metars_api_url": "http://10.10.1.13:3000/metars",
+  "visited_api_url": "http://10.10.1.13:3000/airports",
+  "icao_leds": {
+    "KSRQ": 10, "KTPA": 11, "KBKV": 12, "KLEE": 13, "KMCO": 14, "KDAB": 15, "KOCF": 16, "KGNV": 17, "KCTY": 18, "KAAF": 19,
+    "KECP": 20, "KDTS": 21, "KPNS": 22, "K54J": 23, "KMAI": 24, "K17J": 25, "KBGE": 26, "KTLH": 27, "KFPY": 28, "K24J": 29,
+    "KLCQ": 30, "KCRG": 31, "KFHB": 32, "KSSI": 33, "KAYS": 34, "KAMG": 35, "KHOE": 36, "KVLD": 37, "KTVI": 38, "KMGR": 39,
+    "KTMA": 40, "KCXU": 41, "KABY": 42, "KBIJ": 43, "KHDL": 44, "KDHN": 45, "KEDN": 46, "K79J": 47, "KGZH": 48, "KPRN": 49,
+    "KSEM": 50, "KMGM": 51, "KTOI": 52, "KEUF": 53, "KACJ": 54, "KCKF": 55, "KFZG": 56, "KEZM": 57, "KAZE": 58, "KVDI": 59,
+    "KLHW": 60, "KSAV": 61, "KHXD": 62, "KTBR": 63, "KDBN": 64, "KMCN": 65, "K6A1": 66, "KCSG": 67, "KAUO": 68, "KLGC": 69,
+    "KOPN": 70, "KMLJ": 71, "KOKZ": 72, "K2J3": 73, "KAGS": 74, "KOGB": 75, "KCAE": 76, "KGRD": 77, "K3J7": 78, "KAHN": 79,
+    "KWDR": 80, "KPDK": 81, "KATL": 82, "KCTJ": 83, "KGAD": 84, "KASN": 85, "KBHM": 86, "KTCL": 87, "KHSV": 88, "KRMG": 89,
+    "KVPC": 90, "KJZP": 91, "KGVL": 92, "KTOC": 93, "KAND": 94, "KGSP": 95, "KCLT": 96, "KINT": 97, "KTRI": 98, "KGCY": 99,
+    "KAVL": 100, "KDZJ": 101, "KDNN": 102, "KCHA": 103, "KTHA": 104, "KMRC": 105, "KCKV": 106, "KBNA": 107, "KCSV": 108, "KTYS": 109
+  },
+  "modes": {
+    "flight_category": "flight_category",
+    "temperature": "temperature",
+    "visited": "visited",
+    "party": "party"
+  },
+  "refresh_threshold": {
+    "flight_category": 300,
+    "temperature": 300,
+    "visited": 300,
+    "party": 0.2
+  },
+  "legend_leds": {
+    "vfr_led": "green",
+    "mvfr_led": "blue",
+    "ifr_led": "red",
+    "lifr_led": "magenta",
+    "visited_led": "green",
+    "not_visited_led": "red"
+  },
+  "colors": {
+    "red": [255, 0, 0],
+    "IFR": [255, 0, 0],
+    "green": [0, 255, 0],
+    "VFR": [0, 255, 0],
+    "blue": [0, 0, 255],
+    "MVFR": [0, 0, 255],
+    "magenta": [255, 0, 255],
+    "LIFR": [255, 0, 255],
+    "white": [255, 255, 255],
+    "off": [0, 0, 0]
+  },
+  "legend_mode_leds": [
+    "flight_category_mode_led",
+    "temperature_mode_led",
+    "visited_mode_led",
+    "party_mode_led"
+  ],
+  "button_pins": {
+    "flight_category": 12,
+    "temperature": 16,
+    "visited": 20,
+    "party": 21
+  },
+  "party_colors": [
+    [255, 0, 0],
+    [213, 42, 0],
+    [171, 85, 0],
+    [171, 127, 0],
+    [171, 171, 0],
+    [86, 213, 0],
+    [0, 255, 0],
+    [0, 213, 42],
+    [0, 171, 85],
+    [0, 86, 170],
+    [0, 0, 255],
+    [42, 0, 213],
+    [85, 0, 171],
+    [127, 0, 129],
+    [171, 0, 85],
+    [213, 0, 43]
+  ]
+}
