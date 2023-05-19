@@ -14,12 +14,11 @@ config = json.load(open('config.json'))
 metars = {}
 data_refreshed_at = None
 map_stale = True
-mfb_unreachable = False
 visited = []
 shutting_down = False
 map_mode = 'flight_category'
 leds = Adafruit_NeoPixel(config['num_of_leds'], config['led_data_pin'], brightness=config['led_brightness'])
-flight_category_button = Button(config['button_pins']['flight_category'])
+flight_category_button = Button(config['button_pins']['flight_category'], hold_time=5)
 temperature_button = Button(config['button_pins']['temperature'])
 visited_button = Button(config['button_pins']['visited'])
 party_button = Button(config['button_pins']['party'], hold_time=5)
@@ -40,6 +39,12 @@ def cleanup():
         set_led(i, config['colors']['off'])
     leds.show()
 
+def expire_data():
+    global map_stale, data_refreshed_at
+
+    map_stale = True
+    data_refreshed_at = None
+
 def shutdown():
     global shutting_down
 
@@ -49,6 +54,7 @@ def shutdown():
 
 def configure_buttons():
     flight_category_button.when_pressed = lambda : set_map_mode('flight_category')
+    flight_category_button.when_held = expire_data
     temperature_button.when_pressed = lambda : set_map_mode('temperature')
     visited_button.when_pressed = lambda : set_map_mode('visited')
     party_button.when_pressed = lambda : set_map_mode('party')
@@ -91,7 +97,7 @@ def update_map():
         party()
 
 def set_map_from(mode):
-    global map_stale, mfb_unreachable
+    global map_stale
 
     if mode in ['flight_category', 'temperature']:
         for icao in metars:
@@ -107,15 +113,11 @@ def set_map_from(mode):
             set_led(config['icao_leds'][icao], config['colors']['white'])
 
     elif mode == 'visited':
-        if mfb_unreachable:
-            for icao in metars.keys():
-                set_led(config['icao_leds'][icao], config['colors']['white'])
-        else:
-            for icao, index in config['icao_leds'].items():
-                if icao in visited:
-                    set_led(index, config['colors']['green'])
-                else:
-                    set_led(index, config['colors']['red'])
+        for icao, index in config['icao_leds'].items():
+            if icao in visited:
+                set_led(index, config['colors']['green'])
+            else:
+                set_led(index, config['colors']['red'])
 
     leds.show()
     map_stale = False
@@ -137,7 +139,7 @@ def check_metars():
             pass
 
 def check_visited():
-    global visited, data_refreshed_at, map_stale, mfb_unreachable
+    global visited, data_refreshed_at, map_stale
 
     if data_stale():
         try:
@@ -146,9 +148,7 @@ def check_visited():
                 visited = json.loads(response.text)
                 data_refreshed_at = time.time()
                 map_stale = True
-                mfb_unreachable = False
         except:
-            mfb_unreachable = True
             pass
 
 def color_from_category(category):
