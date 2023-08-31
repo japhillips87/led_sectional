@@ -178,6 +178,11 @@ def party():
         data_refreshed_at = time.time()
 
 def data_stale():
+    global map_stale
+
+    if map_stale:
+        return True
+
     _time = data_refreshed_at # race condition
     if _time == None:
         return True
