@@ -131,7 +131,7 @@ def check_metars():
         payload = { 'icaos': icao_string }
         try:
             response = requests.get(config['metars_api_url'], params=payload)
-            if response:
+            if response and response.status_code == 200:
                 metars = json.loads(response.text)
                 data_refreshed_at = time.time()
                 map_stale = True
