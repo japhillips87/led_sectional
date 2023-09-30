@@ -12,10 +12,10 @@
   "min_temp": 0,
   "max_temp": 38,
   "num_of_leds": 110,
-  "led_data_pin": 18,
-  "led_brightness": 30,
-  "metars_api_url": "http://10.10.1.13:3000/metars",
-  "visited_api_url": "http://10.10.1.13:3000/airports",
+  "led_data_pin": 9,
+  "led_brightness": 0.25,
+  "metars_api_url": "https://aviation-tools.japhillips87.com/metars",
+  "visited_api_url": "https://aviation-tools.japhillips87.com/airports",
   "icao_leds": {
     "KSRQ": 10, "KTPA": 11, "KBKV": 12, "KLEE": 13, "KMCO": 14, "KDAB": 15, "KOCF": 16, "KGNV": 17, "KCTY": 18, "KAAF": 19,
     "KECP": 20, "KDTS": 21, "KPNS": 22, "K54J": 23, "KMAI": 24, "K17J": 25, "KBGE": 26, "KTLH": 27, "KFPY": 28, "K24J": 29,
@@ -38,7 +38,7 @@
     "flight_category": 300,
     "temperature": 300,
     "visited": 300,
-    "party": 0.2
+    "party": 0.1
   },
   "legend_leds": {
     "vfr_led": "green",
@@ -67,9 +67,9 @@
     "party_mode_led"
   ],
   "button_pins": {
-    "flight_category": 12,
-    "temperature": 16,
-    "visited": 20,
+    "flight_category": 10,
+    "temperature": 17,
+    "visited": 18,
     "party": 21
   },
   "party_colors": [

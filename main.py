@@ -1,43 +1,55 @@
-# https://tutorials-raspberrypi.com/connect-control-raspberry-pi-ws2812-rgb-led-strips/
 import json
-import requests
+import urequests
 import time
 import math
 import random
-import traceback
-from gpiozero import Button
 from neopixel import *
-from subprocess import check_call
-from signal import pause
+from machine import Pin
 
 config = json.load(open('config.json'))
 metars = {}
 data_refreshed_at = None
 map_stale = True
 visited = []
-shutting_down = False
 map_mode = 'flight_category'
-leds = Adafruit_NeoPixel(config['num_of_leds'], config['led_data_pin'], brightness=config['led_brightness'])
-flight_category_button = Button(config['button_pins']['flight_category'], hold_time=5)
-temperature_button = Button(config['button_pins']['temperature'])
-visited_button = Button(config['button_pins']['visited'])
-party_button = Button(config['button_pins']['party'], hold_time=5)
+
+led_pin = Pin(config['led_data_pin'])
+leds = NeoPixel(led_pin, config['num_of_leds'])
+
+flight_category_button = Pin(config['button_pins']['flight_category'], Pin.IN, Pin.PULL_UP)
+temperature_button = Pin(config['button_pins']['temperature'], Pin.IN, Pin.PULL_UP)
+visited_button = Pin(config['button_pins']['visited'], Pin.IN, Pin.PULL_UP)
+party_button = Pin(config['button_pins']['party'], Pin.IN, Pin.PULL_UP)
+
+def button_pressed(button):
+    buttons = {'flight_category': flight_category_button, 'temperature': temperature_button, 'visited': visited_button, 'party': party_button}
+
+    for mode, btn in buttons.items():
+        if btn == button:
+            button.irq(handler=None)
+            time.sleep(0.2) # debounce
+            button.irq(handler=button_pressed, trigger=Pin.IRQ_RISING)
+            set_map_mode(mode)
+
+
+flight_category_button.irq(trigger=Pin.IRQ_RISING, handler=button_pressed)
+temperature_button.irq(trigger=Pin.IRQ_RISING, handler=button_pressed)
+visited_button.irq(trigger=Pin.IRQ_RISING, handler=button_pressed)
+party_button.irq(trigger=Pin.IRQ_RISING, handler=button_pressed)
 
 def loop():
     setup()
-    while shutting_down != True:
+    while True:
         update_map()
 
 def setup():
-    configure_buttons()
-    leds.begin()
     set_legend_leds()
     set_map_mode('flight_category')
 
 def cleanup():
-    for i in range(leds.numPixels()):
+    for i in range(leds.__len__()):
         set_led(i, config['colors']['off'])
-    leds.show()
+    leds.write()
 
 def expire_data():
     global map_stale, data_refreshed_at
@@ -45,25 +57,10 @@ def expire_data():
     map_stale = True
     data_refreshed_at = None
 
-def shutdown():
-    global shutting_down
-
-    shutting_down = True
-    cleanup()
-    check_call(['sudo', 'poweroff'])
-
-def configure_buttons():
-    flight_category_button.when_pressed = lambda : set_map_mode('flight_category')
-    flight_category_button.when_held = expire_data
-    temperature_button.when_pressed = lambda : set_map_mode('temperature')
-    visited_button.when_pressed = lambda : set_map_mode('visited')
-    party_button.when_pressed = lambda : set_map_mode('party')
-    party_button.when_held = shutdown
-
 def set_legend_leds():
     for index, color in config['legend_leds'].items():
         set_led(config[index], config['colors'][color])
-    leds.show()
+    leds.write()
 
 def set_map_mode(mode):
     global map_mode, map_stale, data_refreshed_at
@@ -71,7 +68,6 @@ def set_map_mode(mode):
     map_mode = mode
     map_stale = True
     data_refreshed_at = None
-
     update_legend_mode_leds()
 
 def update_legend_mode_leds():
@@ -81,10 +77,10 @@ def update_legend_mode_leds():
             set_led(config[possible_index], config['colors']['white'])
         else:
             set_led(config[index], config['colors']['off'])
-    leds.show()
+    leds.write()
 
 def set_led(index, color):
-    leds.setPixelColor(index, Color(*color))
+    leds[index] = [int(config['led_brightness'] * i) for i in color]
 
 def update_map():
     if map_mode == 'flight_category' or map_mode == 'temperature':
@@ -99,42 +95,41 @@ def update_map():
 def set_map_from(mode):
     global map_stale
 
-    if mode in ['flight_category', 'temperature']:
-        for icao in metars:
-            if metars[icao]:
-                if mode == 'flight_category':
-                    set_led(config['icao_leds'][icao], color_from_category(metars[icao][mode]))
+    if map_stale:
+        if mode in ['flight_category', 'temperature']:
+            for icao in metars:
+                if metars[icao]:
+                    if mode == 'flight_category':
+                        set_led(config['icao_leds'][icao], color_from_category(metars[icao][mode]))
+                    else:
+                        set_led(config['icao_leds'][icao], color_from_temp(metars[icao]['temp_c']))
                 else:
-                    set_led(config['icao_leds'][icao], color_from_temp(metars[icao]['temp_c']))
-            else:
-                continue
+                    continue
 
-        for icao in metars.keys() ^ config['icao_leds'].keys():
-            set_led(config['icao_leds'][icao], config['colors']['white'])
+            for icao in config['icao_leds'].keys():
+                if not icao in metars.keys():
+                    set_led(config['icao_leds'][icao], config['colors']['white'])
 
-    elif mode == 'visited':
-        for icao, index in config['icao_leds'].items():
-            if icao in visited:
-                set_led(index, config['colors']['green'])
-            else:
-                set_led(index, config['colors']['red'])
+        elif mode == 'visited':
+            for icao, index in config['icao_leds'].items():
+                if icao in visited:
+                    set_led(index, config['colors']['green'])
+                else:
+                    set_led(index, config['colors']['red'])
 
-    leds.show()
-    map_stale = False
+        leds.write()
+        map_stale = False
 
 
 def check_metars():
     global metars, data_refreshed_at, map_stale
 
     if data_stale():
-        icao_string = ','.join(config['icao_leds'].keys())
-        payload = { 'icaos': icao_string }
         try:
-            response = requests.get(config['metars_api_url'], params=payload)
-            if response and response.status_code == 200:
-                metars = json.loads(response.text)
-                data_refreshed_at = time.time()
-                map_stale = True
+            response = urequests.get(config['metars_api_url'])
+            metars = response.json()
+            data_refreshed_at = time.time()
+            map_stale = True
         except:
             pass
 
@@ -143,11 +138,10 @@ def check_visited():
 
     if data_stale():
         try:
-            response = requests.get(config['visited_api_url'])
-            if response:
-                visited = json.loads(response.text)
-                data_refreshed_at = time.time()
-                map_stale = True
+            response = urequests.get(config['visited_api_url'])
+            visited = response.json()
+            data_refreshed_at = time.time()
+            map_stale = True
         except:
             pass
 
@@ -174,12 +168,10 @@ def party():
     if data_stale():
         for index in config['icao_leds'].values():
             set_led(index, random.choice(config['party_colors']))
-        leds.show()
+        leds.write()
         data_refreshed_at = time.time()
 
 def data_stale():
-    global map_stale
-
     if map_stale:
         return True
 
@@ -194,7 +186,6 @@ def data_stale():
 try:
     loop()
 except Exception as e:
-    traceback.print_exc()
     print(e)
 finally:
     cleanup()
