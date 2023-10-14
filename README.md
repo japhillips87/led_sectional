@@ -1,2 +1,2 @@
 # led_sectional
-Raspberry Pi controlled sectional weather map
+Arduino NanoESP32 controlled sectional weather map
